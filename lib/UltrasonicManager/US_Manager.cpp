@@ -1,7 +1,7 @@
 #include "US_Manager.h"
 
 US_Manager::US_Manager() : distance(0), alpha(0.2) {
-        ultrasonic = Ultrasonic(12, 13, 0.0343, 5000);     
+        ultrasonic = Ultrasonic(12, 13, 0.0343, 4000);     
 }
 void US_Manager::init() {
     ultrasonic.init();

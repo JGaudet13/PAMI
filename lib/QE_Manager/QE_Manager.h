@@ -13,6 +13,7 @@ class QE_Manager {
     
     double distanceRight = 0;
     double distanceLeft = 0;
+    QE_Manager();
     QE_Manager(int rA, int rB, int lA, int lB, double base, double diam);
     void init();
     void update();

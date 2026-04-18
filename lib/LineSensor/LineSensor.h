@@ -1,6 +1,7 @@
 #include <QTRSensors.h>
 class LineSensor {
 public:
+  LineSensor();
   LineSensor(double alpha);
   void init();
   void calibrateLineSensor();

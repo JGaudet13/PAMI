@@ -2,6 +2,8 @@
 #include <cmath>
 
 // Constructor initializes encoders with specific hardware units
+
+
 QE_Manager::QE_Manager(int rA, int rB, int lA, int lB, double base, double diam) 
     : right_enc(rA, rB, PCNT_UNIT_0), 
       left_enc(lA, lB, PCNT_UNIT_1), 

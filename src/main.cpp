@@ -1,40 +1,39 @@
 #include <Arduino.h>
 
 #include "Tail.h"
-
-#include "US_Manager.h"
-#include "QE_Manager.h"
 #include "Motor.h"
-#include "LineSensor.h"
+
+#include "SensingThread.h"
 
 
 Motor m_right(7, 15, 16, 1, Right);
 Motor m_left(6, 5, 4, 0, Left);
-QE_Manager QE(18,8, 10, 9, 78.0, 35.0);
+
 Tail tail;
-LineSensor lineSensor(0.2);
+SensingThread sensors;
 double alpha = 0.7;
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   m_right.init();
   m_left.init();
   tail.attach(14);
   tail.setAngleLimits(60, 120);
   tail.initialPosition();
-  lineSensor.init();
-  QE.init();
+  
+  sensors.setup_sensors();
+  sensors.start_sensing_thread();
 }
 
 void loop() { 
-  lineSensor.calibrateLineSensor();
-  m_left.applySpeed(1);
-  while (true) {
-    QE.update();
-    Serial.print(">SpeedR:");
-    Serial.println(QE.getRightSpeed());
-    Serial.print(">SpeedL:");
-    Serial.println(QE.getLeftSpeed());
-    delay(10);
-  }
+  sensorInfoPID info = sensors.sensor_values();
+  Serial.print(">ls:");
+  Serial.println(info.LS_error);
+  Serial.print(">ultrasonic:");
+  Serial.println(info.obstacle);
+  Serial.print(">right_motor:");
+  Serial.println(info.right_speed);
+  Serial.print(">left motor:");
+  Serial.println(info.left_speed);
+  delay(100);
 }
 
