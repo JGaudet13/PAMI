@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "LineSensor.h"
 
-LineSensor::LineSensor() {}
+LineSensor::LineSensor(double alpha): alpha(alpha) {}
 void LineSensor::init() {
   qtr.setTypeRC();
   qtr.setSensorPins((const uint8_t[]){35, 36, 37, 38, 39, 40, 41, 42}, 8);
@@ -30,7 +30,9 @@ double LineSensor::readSensorCOM() {
     mass += (sensorReadings[i]);
   }
   qtr.emittersOff();
-  return moment/mass;
+  double new_value = moment/mass;
+  filtered = alpha*new_value + filtered*(1-alpha);
+  return filtered;
 }
 
 double LineSensor::readSensorBAD() {

@@ -1,13 +1,14 @@
 #include <QTRSensors.h>
 class LineSensor {
 public:
-  LineSensor();
+  LineSensor(double alpha);
   void init();
   void calibrateLineSensor();
   double readSensorCOM();
   double readSensorBAD();
   QTRSensors qtr;
-
+  double filtered;
+  double alpha;
   double positions[8] = {
     -33.3375, // Capteur 0 (Extrême gauche)
     -23.8125, // Capteur 1
