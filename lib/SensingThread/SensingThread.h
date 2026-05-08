@@ -1,3 +1,4 @@
+#pragma once
 #include <Arduino.h>
 #include "QE_Manager.h"
 #include "US_Manager.h"
@@ -8,6 +9,8 @@ struct sensorInfoPID {
   double obstacle;
   double LS_error;
 };
+
+
 
 
   class SensingThread {

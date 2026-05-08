@@ -1,3 +1,4 @@
+#pragma once
 #ifndef QUADRATURE_ENCODER_H
 #define QUADRATURE_ENCODER_H
 

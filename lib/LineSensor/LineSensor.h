@@ -1,3 +1,4 @@
+#pragma once
 #include <QTRSensors.h>
 class LineSensor {
 public:
@@ -7,6 +8,7 @@ public:
   void calibrateLineSensor();
   double readSensorCOM();
   double readSensorBAD();
+  double readSensorSquared();
   QTRSensors qtr;
   double filtered;
   double alpha;

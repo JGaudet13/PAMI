@@ -18,7 +18,7 @@ static void sensingTaskWrapper(void* pvParameters) {
         instance->_currentData.left_speed  = instance->encoder.getLeftSpeed();
         instance->_currentData.right_speed = instance->encoder.getRightSpeed();
         instance->_currentData.obstacle    = instance->ultrasonic.get_obj_distance();
-        instance->_currentData.LS_error    = instance->linesensor.readSensorCOM();
+        instance->_currentData.LS_error    = instance->linesensor.readSensorSquared();
 
         // 3. Wait for the next 10ms mark
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
@@ -27,7 +27,7 @@ static void sensingTaskWrapper(void* pvParameters) {
 SensingThread::SensingThread() 
     : encoder(18, 8, 10, 9, 78.0, 35.0), // Pass your specific pins/data here
       ultrasonic(),                        // US_Manager seems okay with default
-      linesensor(0.3)                         // If LineSensor needs pins, add them here too
+      linesensor(0.5)                         // If LineSensor needs pins, add them here too
 {
     _taskHandle = NULL;
     _currentData = {0.0, 0.0, 0.0, 0.0};

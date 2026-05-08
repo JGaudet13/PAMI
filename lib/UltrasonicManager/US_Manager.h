@@ -1,3 +1,4 @@
+#pragma once
 #include <Ultrasonic.h>
 #include <Arduino.h>
 class US_Manager {

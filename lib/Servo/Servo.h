@@ -1,3 +1,4 @@
+#pragma once
 class CustomServo {
   int freq;
   int channel;

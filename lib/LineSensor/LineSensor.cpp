@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "LineSensor.h"
-
+#include <math.h>
 LineSensor::LineSensor(double alpha): alpha(alpha) {}
 void LineSensor::init() {
   qtr.setTypeRC();
@@ -22,7 +22,7 @@ double LineSensor::readSensorCOM() {
   double mass = 0;
   double moment = 0;
   
-  for (int i = 1; i < 7; i++) {
+  for (int i = 0; i < 8; i++) {
     if(sensorReadings[i] < 500) {
       sensorReadings[i] = 20.0;
     }
@@ -38,7 +38,7 @@ double LineSensor::readSensorCOM() {
 double LineSensor::readSensorBAD() {
     uint16_t sensorReadings[8];
     int max1_idx = 0;
-    int max2_idx = 1;
+    int max2_idx = 0;
     qtr.readCalibrated(sensorReadings);
     // 1. Trouver les deux indices avec les plus grandes valeurs
     // On suppose que "plus grand" = plus proche de la ligne noire
@@ -69,4 +69,25 @@ double LineSensor::readSensorBAD() {
     
   qtr.emittersOff();
   return position;
+}
+
+double LineSensor::readSensorSquared() {
+  uint16_t sensorReadings[8];
+  qtr.emittersOn();
+  qtr.readCalibrated(sensorReadings);
+  
+  double mass = 0;
+  double moment = 0;
+  
+  for (int i = 1; i < 7; i++) {
+    if(sensorReadings[i] < 500) {
+      sensorReadings[i] = 20.0;
+    }
+    moment += (sensorReadings[i]*sensorReadings[i]*sensorReadings[i]*(double)positions[i]);
+    mass += (sensorReadings[i]*sensorReadings[i]*sensorReadings[i]);
+  }
+  qtr.emittersOff();
+  double new_value = moment/mass;
+  filtered = alpha*new_value + filtered*(1-alpha);
+  return filtered;
 }
