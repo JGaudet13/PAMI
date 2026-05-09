@@ -6,7 +6,7 @@ RobotMotion::RobotMotion(Motor* leftMotor, Motor* rightMotor, QE_Manager* encode
       _wheelDiameterMm(wheelDiameterMm), _baseWidthMm(baseWidthMm),
       _ticksPerRev(ticksPerRev), _minSpeed(0.0), _maxSpeed(1.0),
       _leftTrim(1.0), _rightTrim(1.0), _activeLeftSpeed(0.0), _activeRightSpeed(0.0),
-      _movementTimeoutMs(30000),
+      _straightCorrectionGain(0.0015), _maxStraightCorrection(0.12), _movementTimeoutMs(30000),
       _obstacleReader(nullptr),
       _obstacleBehavior(OBSTACLE_IGNORE), _obstacleThresholdCm(20.0),
       _gameObstaclePauseMs(3000), _gameObstacleCooldownMs(2000),
@@ -20,8 +20,7 @@ void RobotMotion::init() {
 void RobotMotion::stop() {
   _activeLeftSpeed = 0.0;
   _activeRightSpeed = 0.0;
-  if (_left) _left->applySpeed(0.0);
-  if (_right) _right->applySpeed(0.0);
+  applyMotorSpeeds(0.0, 0.0);
 }
 
 void RobotMotion::setSpeedLimits(double minSpeed, double maxSpeed) {
@@ -32,6 +31,11 @@ void RobotMotion::setSpeedLimits(double minSpeed, double maxSpeed) {
 void RobotMotion::setMotorTrim(double leftTrim, double rightTrim) {
   _leftTrim = leftTrim;
   _rightTrim = rightTrim;
+}
+
+void RobotMotion::setStraightCorrection(double gain, double maxCorrection) {
+  _straightCorrectionGain = gain;
+  _maxStraightCorrection = maxCorrection;
 }
 
 void RobotMotion::setMovementTimeoutMs(unsigned long timeoutMs) {
@@ -53,7 +57,7 @@ void RobotMotion::setObstacleBehavior(ObstacleBehavior behavior, double threshol
   _gameObstacleArmed = true;
 }
 
-void RobotMotion::setMotorSpeeds(double leftSpeed, double rightSpeed) {
+void RobotMotion::applyMotorSpeeds(double leftSpeed, double rightSpeed) {
   leftSpeed *= _leftTrim;
   rightSpeed *= _rightTrim;
 
@@ -62,11 +66,14 @@ void RobotMotion::setMotorSpeeds(double leftSpeed, double rightSpeed) {
   if (rightSpeed > _maxSpeed) rightSpeed = _maxSpeed;
   if (rightSpeed < -_maxSpeed) rightSpeed = -_maxSpeed;
 
-  _activeLeftSpeed = leftSpeed;
-  _activeRightSpeed = rightSpeed;
-
   if (_left) _left->applySpeed(leftSpeed);
   if (_right) _right->applySpeed(rightSpeed);
+}
+
+void RobotMotion::setMotorSpeeds(double leftSpeed, double rightSpeed) {
+  _activeLeftSpeed = leftSpeed;
+  _activeRightSpeed = rightSpeed;
+  applyMotorSpeeds(leftSpeed, rightSpeed);
 }
 
 int RobotMotion::calculateCountsForDistanceCm(double distanceCm) const {
@@ -128,16 +135,19 @@ unsigned long RobotMotion::handleObstacleIfNeeded(double resumeLeftSpeed, double
   return millis() - pauseStart;
 }
 
-void RobotMotion::waitForTargetCounts(int targetCountsRight, int targetCountsLeft) {
+void RobotMotion::waitForTargetCounts(int targetCountsRight, int targetCountsLeft, bool balanceStraight) {
   if (!_encoder) return;
 
   const int startRight = _encoder->right_enc.getCount();
   const int startLeft = _encoder->left_enc.getCount();
   const unsigned long startTime = millis();
+  const double baseLeftSpeed = _activeLeftSpeed;
+  const double baseRightSpeed = _activeRightSpeed;
+  const double direction = ((baseLeftSpeed + baseRightSpeed) >= 0.0) ? 1.0 : -1.0;
   unsigned long pausedTimeMs = 0;
 
   while (true) {
-    pausedTimeMs += handleObstacleIfNeeded(_activeLeftSpeed, _activeRightSpeed);
+    pausedTimeMs += handleObstacleIfNeeded(baseLeftSpeed, baseRightSpeed);
 
     int currentRight = _encoder->right_enc.getCount();
     int currentLeft = _encoder->left_enc.getCount();
@@ -148,6 +158,19 @@ void RobotMotion::waitForTargetCounts(int targetCountsRight, int targetCountsLef
     bool leftDone = deltaLeft >= abs(targetCountsLeft);
 
     if (rightDone && leftDone) break;
+
+    if (balanceStraight) {
+      double countError = (double)(deltaRight - deltaLeft);
+      double correction = countError * _straightCorrectionGain;
+
+      if (correction > _maxStraightCorrection) correction = _maxStraightCorrection;
+      if (correction < -_maxStraightCorrection) correction = -_maxStraightCorrection;
+
+      applyMotorSpeeds(
+        baseLeftSpeed + correction * direction,
+        baseRightSpeed - correction * direction
+      );
+    }
 
     if (_movementTimeoutMs > 0 && millis() - startTime - pausedTimeMs >= _movementTimeoutMs) {
       Serial.println("RobotMotion timeout waiting for encoder target.");
@@ -171,7 +194,7 @@ void RobotMotion::moveForwardCm(double distanceCm, double speed) {
   _encoder->left_enc.reset();
 
   setMotorSpeeds(speed, speed);
-  waitForTargetCounts(targetCounts, targetCounts);
+  waitForTargetCounts(targetCounts, targetCounts, true);
 }
 
 void RobotMotion::moveBackwardCm(double distanceCm, double speed) {
@@ -183,7 +206,7 @@ void RobotMotion::moveBackwardCm(double distanceCm, double speed) {
   _encoder->left_enc.reset();
 
   setMotorSpeeds(-speed, -speed);
-  waitForTargetCounts(targetCounts, targetCounts);
+  waitForTargetCounts(targetCounts, targetCounts, true);
 }
 
 void RobotMotion::turnRightDeg(double angleDeg, double speed) {

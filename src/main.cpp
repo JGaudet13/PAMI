@@ -54,9 +54,14 @@ const ObstacleBehavior ACTIVE_OBSTACLE_BEHAVIOR = OBSTACLE_GAME;
 const double OBSTACLE_STOP_DISTANCE_CM = 20.0;
 const unsigned long GAME_OBSTACLE_PAUSE_MS = 3000;
 const unsigned long GAME_OBSTACLE_COOLDOWN_MS = 2000;
+const double STRAIGHT_CORRECTION_GAIN = 0.0015;
+const double MAX_STRAIGHT_CORRECTION = 0.12;
 
 #if PAMI_ID == 3
-const double LEFT_MOTOR_TRIM = 0.95;
+const double LEFT_MOTOR_TRIM = 1.00;
+const double RIGHT_MOTOR_TRIM = 0.90;
+#elif PAMI_ID == 4
+const double LEFT_MOTOR_TRIM = 0.975;
 const double RIGHT_MOTOR_TRIM = 1.00;
 #else
 const double LEFT_MOTOR_TRIM = 1.00;
@@ -197,20 +202,20 @@ void runSharedTestPath() {
 }
 
 void runPami1BluePath() {
-  motion.moveForwardCm(50, 0.5);
+  motion.moveForwardCm(107, 0.5);
   Serial.println("Finished PAMI 1 first forward move.");
   motion.turnRightDeg(90, 0.5);
   Serial.println("Finished PAMI 1 right turn.");
-  motion.moveForwardCm(53, 0.5);
+  motion.moveForwardCm(20, 0.5);
   Serial.println("Finished PAMI 1 second forward move.");
 }
 
 void runPami1YellowPath() {
-  motion.moveForwardCm(50, 0.5);
+  motion.moveForwardCm(107, 0.5);
   Serial.println("Finished PAMI 1 first forward move.");
   motion.turnRightDeg(90, 0.5);
   Serial.println("Finished PAMI 1 right turn.");
-  motion.moveForwardCm(53, 0.5);
+  motion.moveForwardCm(20, 0.5);
   Serial.println("Finished PAMI 1 second forward move.");
 }
 
@@ -266,12 +271,8 @@ void runPami3YellowPath() {
 }
 
 void runPami3BluePath() {
-  motion.moveForwardCm(100, 0.5);
-  Serial.println("Finished PAMI 3 blue first forward move.");
-  motion.turnRightDeg(90, 0.5);
-  Serial.println("Finished PAMI 3 blue right turn.");
-  motion.moveForwardCm(20, 0.5);
-  Serial.println("Finished PAMI 3 blue final forward move.");
+  motion.moveForwardCm(90, 0.5);
+  Serial.println("Finished PAMI 3 blue forward move.");
 }
 
 void runPami3Path() {
@@ -282,12 +283,30 @@ void runPami3Path() {
   }
 }
 
+void runPami4BluePath() {
+  motion.moveForwardCm(150, 0.5);
+  Serial.println("Finished PAMI 4 blue first forward move.");
+}
+
+void runPami4YellowPath() {
+  motion.moveForwardCm(155, 0.5);
+  Serial.println("Finished PAMI 4 yellow first forward move.");
+  motion.turnLeftDeg(100, 0.5);
+  Serial.println("Finished PAMI 4 yellow left turn.");
+  motion.moveForwardCm(12, 0.5);
+  Serial.println("Finished PAMI 4 yellow final forward move.");
+}
+
 void runPami4Path() {
-  runSharedTestPath();
+  if (selected_team == TEAM_BLUE) {
+    runPami4BluePath();
+  } else {
+    runPami4YellowPath();
+  }
 }
 
 void runPami5Path() {
-  runSharedTestPath();
+  
 }
 
 void wagTailAfterPath() {
@@ -343,6 +362,7 @@ void setup() {
 
   motion.setSpeedLimits(-1.0, 1.0);
   motion.setMotorTrim(LEFT_MOTOR_TRIM, RIGHT_MOTOR_TRIM);
+  motion.setStraightCorrection(STRAIGHT_CORRECTION_GAIN, MAX_STRAIGHT_CORRECTION);
   motion.setMovementTimeoutMs(30000);
   motion.setObstacleReader(readObstacleDistanceCm);
   motion.setObstacleBehavior(
@@ -364,6 +384,7 @@ void setup() {
   Serial.println("Team topic: " + String(TEAM_TOPIC));
   Serial.println("Selected team: " + String(teamName(selected_team)));
   Serial.println("Motor trim L/R: " + String(LEFT_MOTOR_TRIM) + " / " + String(RIGHT_MOTOR_TRIM));
+  Serial.println("Straight correction gain/max: " + String(STRAIGHT_CORRECTION_GAIN) + " / " + String(MAX_STRAIGHT_CORRECTION));
   Serial.println("Obstacle mode: " + String(obstacleBehaviorName(ACTIVE_OBSTACLE_BEHAVIOR)));
   Serial.println("Waiting for start topic: " + String(START_TOPIC));
   

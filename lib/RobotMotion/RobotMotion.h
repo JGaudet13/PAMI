@@ -32,6 +32,7 @@ class RobotMotion {
 
     void setSpeedLimits(double minSpeed, double maxSpeed);
     void setMotorTrim(double leftTrim, double rightTrim);
+    void setStraightCorrection(double gain, double maxCorrection);
     void setMovementTimeoutMs(unsigned long timeoutMs);
     void setObstacleReader(ObstacleDistanceReader reader);
     void setObstacleBehavior(ObstacleBehavior behavior, double thresholdCm = 20.0,
@@ -51,6 +52,8 @@ class RobotMotion {
     double _rightTrim;
     double _activeLeftSpeed;
     double _activeRightSpeed;
+    double _straightCorrectionGain;
+    double _maxStraightCorrection;
     unsigned long _movementTimeoutMs;
     ObstacleDistanceReader _obstacleReader;
     ObstacleBehavior _obstacleBehavior;
@@ -60,12 +63,13 @@ class RobotMotion {
     unsigned long _lastGameObstaclePauseEndMs;
     bool _gameObstacleArmed;
     double _calibrateFactor;
+    void applyMotorSpeeds(double leftSpeed, double rightSpeed);
     void setMotorSpeeds(double leftSpeed, double rightSpeed);
     int calculateCountsForDistanceCm(double distanceCm) const;
     int calculateCountsForAngleDeg(double angleDeg) const;
     bool obstacleDetected() const;
     unsigned long handleObstacleIfNeeded(double resumeLeftSpeed, double resumeRightSpeed);
-    void waitForTargetCounts(int targetCountsRight, int targetCountsLeft);
+    void waitForTargetCounts(int targetCountsRight, int targetCountsLeft, bool balanceStraight = false);
 };
 
 #endif
