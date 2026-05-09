@@ -37,6 +37,12 @@ const char TEAM_TOPIC[] = "/pami2/team";
 #elif PAMI_ID == 3
 const char START_TOPIC[] = "/pami3/start";
 const char TEAM_TOPIC[] = "/pami3/team";
+#elif PAMI_ID == 4
+const char START_TOPIC[] = "/pami4/start";
+const char TEAM_TOPIC[] = "/pami4/team";
+#elif PAMI_ID == 5
+const char START_TOPIC[] = "/pami5/start";
+const char TEAM_TOPIC[] = "/pami5/team";
 #else
 const char START_TOPIC[] = "/pami/start";
 const char TEAM_TOPIC[] = "/pami/team";
@@ -255,11 +261,11 @@ void runPami3YellowPath() {
 }
 
 void runPami3BluePath() {
-  motion.moveForwardCm(160, 0.5);
+  motion.moveForwardCm(100, 0.5);
   Serial.println("Finished PAMI 3 blue first forward move.");
-  motion.turnRightDeg(70, 0.5);
+  motion.turnRightDeg(90, 0.5);
   Serial.println("Finished PAMI 3 blue right turn.");
-  motion.moveForwardCm(50, 0.5);
+  motion.moveForwardCm(20, 0.5);
   Serial.println("Finished PAMI 3 blue final forward move.");
 }
 
@@ -269,6 +275,14 @@ void runPami3Path() {
   } else {
     runPami3YellowPath();
   }
+}
+
+void runPami4Path() {
+  runSharedTestPath();
+}
+
+void runPami5Path() {
+  runSharedTestPath();
 }
 
 void wagTailAfterPath() {
@@ -296,6 +310,10 @@ void runPath() {
   runPami2Path();
 #elif PAMI_ID == 3
   runPami3Path();
+#elif PAMI_ID == 4
+  runPami4Path();
+#elif PAMI_ID == 5
+  runPami5Path();
 #else
   runSharedTestPath();
 #endif
