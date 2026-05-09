@@ -47,6 +47,15 @@ const bool TEAM_REQUIRED_BEFORE_START = REQUIRE_TEAM_BEFORE_START;
 const ObstacleBehavior ACTIVE_OBSTACLE_BEHAVIOR = OBSTACLE_GAME;
 const double OBSTACLE_STOP_DISTANCE_CM = 20.0;
 const unsigned long GAME_OBSTACLE_PAUSE_MS = 3000;
+const unsigned long GAME_OBSTACLE_COOLDOWN_MS = 2000;
+
+#if PAMI_ID == 3
+const double LEFT_MOTOR_TRIM = 0.95;
+const double RIGHT_MOTOR_TRIM = 1.00;
+#else
+const double LEFT_MOTOR_TRIM = 1.00;
+const double RIGHT_MOTOR_TRIM = 1.00;
+#endif
 
 enum TeamColor {
   TEAM_YELLOW,
@@ -181,9 +190,30 @@ void runSharedTestPath() {
   motion.moveForwardCm(20, .8);
 }
 
+void runPami1BluePath() {
+  motion.moveForwardCm(50, 0.5);
+  Serial.println("Finished PAMI 1 first forward move.");
+  motion.turnRightDeg(90, 0.5);
+  Serial.println("Finished PAMI 1 right turn.");
+  motion.moveForwardCm(53, 0.5);
+  Serial.println("Finished PAMI 1 second forward move.");
+}
+
+void runPami1YellowPath() {
+  motion.moveForwardCm(50, 0.5);
+  Serial.println("Finished PAMI 1 first forward move.");
+  motion.turnRightDeg(90, 0.5);
+  Serial.println("Finished PAMI 1 right turn.");
+  motion.moveForwardCm(53, 0.5);
+  Serial.println("Finished PAMI 1 second forward move.");
+}
+
 void runPami1Path() {
-  motion.moveForwardCm(110, 0.5);
-  Serial.println("Finished PAMI 1 forward move.");
+  if (selected_team == TEAM_BLUE) {
+    runPami1BluePath();
+  } else {
+    runPami1YellowPath();
+  }
 }
 
 void runPami2YellowPath() {
@@ -294,12 +324,14 @@ void setup() {
   
 
   motion.setSpeedLimits(-1.0, 1.0);
+  motion.setMotorTrim(LEFT_MOTOR_TRIM, RIGHT_MOTOR_TRIM);
   motion.setMovementTimeoutMs(30000);
   motion.setObstacleReader(readObstacleDistanceCm);
   motion.setObstacleBehavior(
     ACTIVE_OBSTACLE_BEHAVIOR,
     OBSTACLE_STOP_DISTANCE_CM,
-    GAME_OBSTACLE_PAUSE_MS
+    GAME_OBSTACLE_PAUSE_MS,
+    GAME_OBSTACLE_COOLDOWN_MS
   );
 
 #if ENABLE_MICROROS_START_TOPIC
@@ -313,6 +345,7 @@ void setup() {
   Serial.println("PAMI ID: " + String(PAMI_ID));
   Serial.println("Team topic: " + String(TEAM_TOPIC));
   Serial.println("Selected team: " + String(teamName(selected_team)));
+  Serial.println("Motor trim L/R: " + String(LEFT_MOTOR_TRIM) + " / " + String(RIGHT_MOTOR_TRIM));
   Serial.println("Obstacle mode: " + String(obstacleBehaviorName(ACTIVE_OBSTACLE_BEHAVIOR)));
   Serial.println("Waiting for start topic: " + String(START_TOPIC));
   

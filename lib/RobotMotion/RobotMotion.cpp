@@ -5,10 +5,12 @@ RobotMotion::RobotMotion(Motor* leftMotor, Motor* rightMotor, QE_Manager* encode
     : _left(leftMotor), _right(rightMotor), _encoder(encoderManager),
       _wheelDiameterMm(wheelDiameterMm), _baseWidthMm(baseWidthMm),
       _ticksPerRev(ticksPerRev), _minSpeed(0.0), _maxSpeed(1.0),
-      _activeLeftSpeed(0.0), _activeRightSpeed(0.0), _movementTimeoutMs(30000),
+      _leftTrim(1.0), _rightTrim(1.0), _activeLeftSpeed(0.0), _activeRightSpeed(0.0),
+      _movementTimeoutMs(30000),
       _obstacleReader(nullptr),
       _obstacleBehavior(OBSTACLE_IGNORE), _obstacleThresholdCm(20.0),
-      _gameObstaclePauseMs(3000), _gameObstacleArmed(true) {}
+      _gameObstaclePauseMs(3000), _gameObstacleCooldownMs(2000),
+      _lastGameObstaclePauseEndMs(0), _gameObstacleArmed(true) {}
 
 void RobotMotion::init() {
   stop();
@@ -27,6 +29,11 @@ void RobotMotion::setSpeedLimits(double minSpeed, double maxSpeed) {
   _maxSpeed = maxSpeed;
 }
 
+void RobotMotion::setMotorTrim(double leftTrim, double rightTrim) {
+  _leftTrim = leftTrim;
+  _rightTrim = rightTrim;
+}
+
 void RobotMotion::setMovementTimeoutMs(unsigned long timeoutMs) {
   _movementTimeoutMs = timeoutMs;
 }
@@ -36,14 +43,20 @@ void RobotMotion::setObstacleReader(ObstacleDistanceReader reader) {
 }
 
 void RobotMotion::setObstacleBehavior(ObstacleBehavior behavior, double thresholdCm,
-                                      unsigned long gamePauseMs) {
+                                      unsigned long gamePauseMs,
+                                      unsigned long gameCooldownMs) {
   _obstacleBehavior = behavior;
   _obstacleThresholdCm = thresholdCm;
   _gameObstaclePauseMs = gamePauseMs;
+  _gameObstacleCooldownMs = gameCooldownMs;
+  _lastGameObstaclePauseEndMs = 0;
   _gameObstacleArmed = true;
 }
 
 void RobotMotion::setMotorSpeeds(double leftSpeed, double rightSpeed) {
+  leftSpeed *= _leftTrim;
+  rightSpeed *= _rightTrim;
+
   if (leftSpeed > _maxSpeed) leftSpeed = _maxSpeed;
   if (leftSpeed < -_maxSpeed) leftSpeed = -_maxSpeed;
   if (rightSpeed > _maxSpeed) rightSpeed = _maxSpeed;
@@ -83,6 +96,11 @@ unsigned long RobotMotion::handleObstacleIfNeeded(double resumeLeftSpeed, double
     return 0;
   }
 
+  if (_obstacleBehavior == OBSTACLE_GAME && _lastGameObstaclePauseEndMs > 0 &&
+      millis() - _lastGameObstaclePauseEndMs < _gameObstacleCooldownMs) {
+    return 0;
+  }
+
   if (_obstacleBehavior == OBSTACLE_GAME && !_gameObstacleArmed) {
     return 0;
   }
@@ -100,6 +118,7 @@ unsigned long RobotMotion::handleObstacleIfNeeded(double resumeLeftSpeed, double
     Serial.println("Obstacle detected. Pausing for game mode.");
     delay(_gameObstaclePauseMs);
     Serial.println("Game obstacle pause complete. Resuming path.");
+    _lastGameObstaclePauseEndMs = millis();
     _gameObstacleArmed = false;
   } else {
     return 0;

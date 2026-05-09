@@ -31,10 +31,12 @@ class RobotMotion {
     void avoidObstacle(double distanceCm, double speed );
 
     void setSpeedLimits(double minSpeed, double maxSpeed);
+    void setMotorTrim(double leftTrim, double rightTrim);
     void setMovementTimeoutMs(unsigned long timeoutMs);
     void setObstacleReader(ObstacleDistanceReader reader);
     void setObstacleBehavior(ObstacleBehavior behavior, double thresholdCm = 20.0,
-                             unsigned long gamePauseMs = 3000);
+                             unsigned long gamePauseMs = 3000,
+                             unsigned long gameCooldownMs = 2000);
 
   private:
     Motor* _left;
@@ -45,6 +47,8 @@ class RobotMotion {
     int _ticksPerRev;
     double _minSpeed;
     double _maxSpeed;
+    double _leftTrim;
+    double _rightTrim;
     double _activeLeftSpeed;
     double _activeRightSpeed;
     unsigned long _movementTimeoutMs;
@@ -52,6 +56,8 @@ class RobotMotion {
     ObstacleBehavior _obstacleBehavior;
     double _obstacleThresholdCm;
     unsigned long _gameObstaclePauseMs;
+    unsigned long _gameObstacleCooldownMs;
+    unsigned long _lastGameObstaclePauseEndMs;
     bool _gameObstacleArmed;
     double _calibrateFactor;
     void setMotorSpeeds(double leftSpeed, double rightSpeed);
