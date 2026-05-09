@@ -52,6 +52,9 @@ const unsigned long GAME_OBSTACLE_COOLDOWN_MS = 2000;
 #if PAMI_ID == 3
 const double LEFT_MOTOR_TRIM = 0.95;
 const double RIGHT_MOTOR_TRIM = 1.00;
+#elif PAMI_ID == 2
+const double LEFT_MOTOR_TRIM = 0.92;
+const double RIGHT_MOTOR_TRIM = 1.00;
 #else
 const double LEFT_MOTOR_TRIM = 1.00;
 const double RIGHT_MOTOR_TRIM = 1.00;
@@ -217,29 +220,21 @@ void runPami1Path() {
 }
 
 void runPami2YellowPath() {
-  motion.moveForwardCm(95, 0.5);
-  Serial.println("Finished PAMI 2 yellow first forward move.");
-  motion.turnLeftDeg(80, 0.5);
-  Serial.println("Finished PAMI 2 yellow left turn.");
-  motion.moveForwardCm(65, 0.5);
-  Serial.println("Finished PAMI 2 yellow second forward move.");
-  motion.turnRightDeg(80, 0.5);
-  Serial.println("Finished PAMI 2 yellow right turn.");
-  motion.moveForwardCm(10, 0.5);
-  Serial.println("Finished PAMI 2 yellow final forward move.");
+  motion.moveForwardCm(110, 0.5);
+  Serial.println("Finished PAMI 2 blue first forward move.");
+  motion.turnRightDeg(90, 0.5);
+  Serial.println("Finished PAMI 2 blue right turn.");
+  motion.moveForwardCm(20, 0.5);
+  Serial.println("Finished PAMI 2 blue second forward move.");
 }
 
 void runPami2BluePath() {
-  motion.moveForwardCm(95, 0.5);
+  motion.moveForwardCm(110, 0.5);
   Serial.println("Finished PAMI 2 blue first forward move.");
-  motion.turnRightDeg(80, 0.5);
-  Serial.println("Finished PAMI 2 blue right turn.");
-  motion.moveForwardCm(65, 0.5);
-  Serial.println("Finished PAMI 2 blue second forward move.");
-  motion.turnLeftDeg(80, 0.5);
+  motion.turnLeftDeg(90, 0.5);
   Serial.println("Finished PAMI 2 blue left turn.");
-  motion.moveForwardCm(10, 0.5);
-  Serial.println("Finished PAMI 2 blue final forward move.");
+  motion.moveForwardCm(20, 0.5);
+  Serial.println("Finished PAMI 2 blue second forward move.");
 }
 
 void runPami2Path() {
