@@ -6,8 +6,16 @@
 #include "Motor.h"
 #include "QE_Manager.h"
 
+enum ObstacleBehavior {
+  OBSTACLE_IGNORE,
+  OBSTACLE_AVOIDANCE,
+  OBSTACLE_GAME
+};
+
 class RobotMotion {
   public:
+    typedef double (*ObstacleDistanceReader)();
+
     RobotMotion(Motor* leftMotor, Motor* rightMotor, QE_Manager* encoderManager,
                 double wheelDiameterMm = 22, double baseWidthMm = 85, int ticksPerRev = 441);
     double calibrateFactor;
@@ -23,6 +31,10 @@ class RobotMotion {
     void avoidObstacle(double distanceCm, double speed );
 
     void setSpeedLimits(double minSpeed, double maxSpeed);
+    void setMovementTimeoutMs(unsigned long timeoutMs);
+    void setObstacleReader(ObstacleDistanceReader reader);
+    void setObstacleBehavior(ObstacleBehavior behavior, double thresholdCm = 20.0,
+                             unsigned long gamePauseMs = 3000);
 
   private:
     Motor* _left;
@@ -33,10 +45,20 @@ class RobotMotion {
     int _ticksPerRev;
     double _minSpeed;
     double _maxSpeed;
+    double _activeLeftSpeed;
+    double _activeRightSpeed;
+    unsigned long _movementTimeoutMs;
+    ObstacleDistanceReader _obstacleReader;
+    ObstacleBehavior _obstacleBehavior;
+    double _obstacleThresholdCm;
+    unsigned long _gameObstaclePauseMs;
+    bool _gameObstacleArmed;
     double _calibrateFactor;
     void setMotorSpeeds(double leftSpeed, double rightSpeed);
     int calculateCountsForDistanceCm(double distanceCm) const;
     int calculateCountsForAngleDeg(double angleDeg) const;
+    bool obstacleDetected() const;
+    unsigned long handleObstacleIfNeeded(double resumeLeftSpeed, double resumeRightSpeed);
     void waitForTargetCounts(int targetCountsRight, int targetCountsLeft);
 };
 
