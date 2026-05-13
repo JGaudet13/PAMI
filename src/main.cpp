@@ -284,12 +284,8 @@ void runPami4BluePath() {
 }
 
 void runPami4YellowPath() {
-  motion.moveForwardCm(155, 0.5);
+  motion.moveForwardCm(150, 0.5);
   Serial.println("Finished PAMI 4 yellow first forward move.");
-  motion.turnLeftDeg(100, 0.5);
-  Serial.println("Finished PAMI 4 yellow left turn.");
-  motion.moveForwardCm(12, 0.5);
-  Serial.println("Finished PAMI 4 yellow final forward move.");
 }
 
 void runPami4Path() {
